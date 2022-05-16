@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pd12
+  namespace: kube-system
+spec:
+  containers:
+    - name: c1
+      image: ubuntu
+      livenessProbe: 
+        httpGet:
+        path: /lakshman.html 

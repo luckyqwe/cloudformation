@@ -1,0 +1,26 @@
+pipeline {
+agent any
+   stages{
+       stage("stg-1") {
+	     steps {
+		    echo "stage name is ${BUILD_NUMBER}"
+		 }
+	   }
+	   stage("stg-2") {
+	     steps {
+		    echo "stage name is ${BUILD_NUMBER}"
+		 }
+	   }
+	   stage("stg-3") {
+	     steps {
+		    echo "stage name is ${BUILD_NUMBER}"
+		 }
+	   }
+   }
+   post {
+	  success {
+	    echo "this job name is ${JOB_NAME}:${BUILD_NUMBER}"
+	  
+	  }
+	  }
+ }

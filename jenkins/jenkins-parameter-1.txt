@@ -1,0 +1,57 @@
+pipeline{
+   agent any
+	parameters {
+			choice choices: ['master', 'cr101', 'rel-1'], name: 'branch'
+	}
+	stages {
+		stage('SCM') {
+			steps {
+               echo " Git Cloning"
+               git branch: "${params.branch}", credentialsId: 'GitAccess', url: 'https://github.com/svreddy0111/javaapp.git'			   
+			}
+		}
+		stage("Build"){
+		    steps{
+				sh '''
+				    mvn --version
+					pwd
+					ls -l
+					mvn package
+					'''
+			}
+		}
+        stage("ImageBuild"){
+			steps{
+				sh '''
+					docker --version
+					cd Docker
+					docker build -t image1 .
+					docker images
+					docker tag image1 docker.io/sheshivardhanp28/webapp:${BUILD_NUMBER}
+					docker images
+				'''
+			}
+		}
+		stage("ImagePush"){
+			steps{
+				withCredentials([usernamePassword(credentialsId: 'DockerAccess', passwordVariable: 'DOCKER_PASSWD', usernameVariable: 'DOCKER_USER')]) {
+						sh '''
+						docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWD}
+						docker push docker.io/sheshivardhanp28/webapp:${BUILD_NUMBER} 
+						'''
+				}
+			}
+		}
+		stage("Deploy2k8s"){
+			steps{
+			sh '''cd k8s
+            sed -i "s/WEBIMAGE/docker.io\\/sheshivardhanp28\\/webapp:{BUILD_NUMBER}/g" pod.yml
+            export KUBECONFIG=/tmp/admin.conf
+            kubectl get nodes
+            kubectl apply -f pod.yml
+            '''
+			}
+		}
+	}
+	
+}
